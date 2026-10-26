@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fetch-certs
+data:
+  fetch-certs.sh: |-
+    #!/usr/bin/env bash
+
+    set -euxo pipefail
+
+    yum -y update
+    yum -y install openssl java
+
+
+    echo "Generating self-signed certificate for SEP..."
+    keytool -genkeypair \
+      -alias starburst \
+      -keyalg RSA \
+      -keystore /mnt/shared/keystore.jks \
+      -keypass changeit \
+      -storepass changeit \
+      -dname "CN=*.starburstdata.com" \
+      -ext san=dns:localhost
