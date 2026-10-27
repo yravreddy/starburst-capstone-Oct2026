@@ -1,0 +1,14 @@
+{
+  "owner": "Bell Integration - Partner",
+  "features": [
+    "*",
+    "agentic-layer",
+    "ai-workflows",
+    "mcp",
+    "spark",
+    "stargate",
+    "warp-speed"
+  ],
+  "expiry": "2027-05-20T00:00:00",
+  "base64Signature": "UorMF7S5tVz9j5MRbGrbCybauuS3GytKXt7FiXcUa8caz5/w5CUdwxEsSGqNN3CCnqmUKfmV6H0ePRhDf6jshnLPg0Y192VPH6VuIvKOwM7VkUnBs7fVQXT1EgqDEy+VJD+G8eG/epEFX7rg1NEzmHjmAG/Q9/tG3xUBB7lkUZ+BwW/ZcVrv9y29KuCCMWSMtT///FbD3VsMoBu4nBkc3259gXkLEunABOLFcKSsPmp2GO8N/8T2lBTIGlN8KV5aRg/nLbn7AiHYKYVPqMFyhXJoGSCmDJ5nWVRBqzax1MlVydpkQUE4rwXl9hUFMg3TXE3RXZOVn8eNF22UhOsluIaoTXWJlQzGygBguE4Y5frfRvaHMNCM9+TmZWs/Jn/Hnpe0BWka+A75r73UEd+Q9J2TTqzn3gn1DgOX4YF56dR9b++zFVXyA8qqTVR5HHByCQ9DAc0lSB3HBZIJ6OQdAzvnM7fZ5O+rQBUyLmswWoAdP5JH/AYr3Os+A3Wy2M344fBUw0xLA3TE33WrC85bh0Q5SlkKMozvmk/4ltMdS/JypHRFoBq8dToBoggAYotc9ArWm8PnKzS2foF+eWgaWhOlPBEdmfrV8m8Ed15pPvmU7arhl603rWiLzaytohvQHaokzUIgKvHtXHlT+/wXrJo5OXql/bSreX0pjUVLMHE="
+}

@@ -4,6 +4,6 @@ metadata:
   name: sep-groups
 data:
   groups.txt: |
-    admin:platform_admin,admin
+    admin:platform_admin,admin,alice
     marketing:jeff,julian,joe
     finance:jeff,luke,aaron

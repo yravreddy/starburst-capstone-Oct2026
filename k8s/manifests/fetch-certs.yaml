@@ -8,11 +8,11 @@ data:
 
     set -euxo pipefail
 
-    yum -y update
-    yum -y install openssl java
+    echo "Cleaning up previous runs..."
+    rm -f /mnt/shared/keystore.jks
+    rm -f /mnt/shared/ldapserver.crt
 
-
-    echo "Generating self-signed certificate for SEP..."
+    echo "Generating self-signed certificate for SEP HTTPS..."
     keytool -genkeypair \
       -alias starburst \
       -keyalg RSA \
@@ -21,3 +21,9 @@ data:
       -storepass changeit \
       -dname "CN=*.starburstdata.com" \
       -ext san=dns:localhost
+
+    echo "Fetching OpenLDAP certificate using Java keytool..."
+    keytool -printcert -sslserver ${LDAP_HOST}:${LDAP_PORT} -rfc > /mnt/shared/ldapserver.crt
+
+    echo "Importing OpenLDAP certificate into truststore..."
+    keytool -importcert -noprompt -alias ldapcert -file /mnt/shared/ldapserver.crt -keystore /mnt/shared/keystore.jks -storepass changeit

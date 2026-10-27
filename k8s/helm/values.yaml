@@ -4,18 +4,7 @@
 imagePullSecrets:
   - name: registry-credentials
 
-# image:
-#   pullPolicy: IfNotPresent
-#   repository: harbor.starburstdata.net/starburstdata/starburst-enterprise
-#   tag: 453-e.4
-# imagePullSecrets: null
-# initFile: ""
-# initImage:
-#   pullPolicy: IfNotPresent
-#   repository: harbor.starburstdata.net/starburstdata/starburst-enterprise-init
-#   tag: 1.5.14
-  
-starburstPlatformLicense: sep-license
+starburstPlatformLicense: starburst-license
 environment: dev
 sharedSecret: abcdefg
 
@@ -40,12 +29,9 @@ initFile: |
   set -euxo pipefail
 
   if [ "${1:-}" == "coordinator" ]; then
-
       mkdir -p /etc/starburst/certs/
-
       echo "Placing certificates..."
       cp /mnt/shared/keystore.jks /etc/starburst/certs/
-
   fi
   echo "Starting starburst"
   exec /usr/lib/starburst/bin/run-starburst
@@ -61,10 +47,19 @@ catalogs:
 # Coordinator
 # -------------------------------
 coordinator:
+  # Issue 1: Cap memory and CPU for local dev laptops
+  resources:
+    limits:
+      memory: "4Gi"
+      cpu: 1
+    requests:
+      memory: "4Gi"
+      cpu: 1
+  nodeMemoryHeadroom: "512Mi"
 
   initContainers:
     - name: cert-manager
-      image: quay.io/centos/centos:stream9
+      image: harbor.starburstdata.net/starburstdata/starburst-enterprise:453-e.4
       env:
         - name: LDAP_HOST
           value: "openldap.example.com"
@@ -79,6 +74,32 @@ coordinator:
         name: sep-secrets
 
   etcFiles:
+    # Issue 4: Override JVM security to allow older MySQL 5.6 Aurora DH ciphers
+    jvm.config: |-
+      -server
+      -XX:G1HeapRegionSize=32M
+      -XX:+ExplicitGCInvokesConcurrent
+      -XX:+HeapDumpOnOutOfMemoryError
+      -XX:-OmitStackTraceInFastThrow
+      -XX:ReservedCodeCacheSize=512M
+      -XX:PerMethodRecompilationCutoff=10000
+      -XX:PerBytecodeRecompilationCutoff=10000
+      -Djdk.attach.allowAttachSelf=true
+      -Djdk.nio.maxCachedBufferSize=2000000
+      -Dfile.encoding=UTF-8
+      --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+      --add-opens=java.base/java.nio=ALL-UNNAMED
+      --add-opens=java.base/java.lang=ALL-UNNAMED
+      --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED
+      -XX:+UseG1GC
+      -agentpath:/usr/lib/starburst/bin/libjvmkill.so
+      -XX:+UnlockDiagnosticVMOptions
+      -XX:G1NumCollectionsKeepPinned=10000000
+      -Djdk.attach.allowAttachSelf=true
+      -XX:+UseAESCTRIntrinsics
+      -XX:GCLockerRetryAllocationCount=100
+      -Djdk.tls.disabledAlgorithms=SSLv3, RC4, DES, MD5withRSA, EC keySize < 224, 3DES_EDE_CBC, anon, NULL
+
     properties:
       config.properties: |-
         coordinator=true
@@ -110,6 +131,9 @@ coordinator:
         password-authenticator.name=ldap
         ldap.url=ldaps://openldap.example.com:636
         ldap.user-bind-pattern=uid=${USER},dc=example,dc=com
+        # Issue 3: Trust the LDAP cert fetched by the initContainer
+        ldap.ssl.truststore.path=/etc/starburst/certs/keystore.jks
+        ldap.ssl.truststore.password=changeit
 
       guard.properties: |-
         access-control.name=starburst
@@ -120,11 +144,54 @@ coordinator:
 
       log.properties: |-
         io.trino=INFO
+        # Issue 3: Enable LDAP Debug Logging
+        io.trino.security.ldap.LdapAuthenticator=DEBUG
 
 # -------------------------------
 # Worker
 # -------------------------------
 worker:
+  # Issue 1: Cap memory and CPU for local dev laptops
+  resources:
+    limits:
+      memory: "4Gi"
+      cpu: 1
+    requests:
+      memory: "4Gi"
+      cpu: 1
+  nodeMemoryHeadroom: "512Mi"
+
+  # Issue 2: Give workers access to the secrets so INSIGHTS_PSWD populates
+  envFrom:
+    - secretRef:
+        name: sep-secrets
+
+  etcFiles:
+    # Issue 4: Override JVM security to allow older MySQL 5.6 Aurora DH ciphers
+    jvm.config: |-
+      -server
+      -XX:G1HeapRegionSize=32M
+      -XX:+ExplicitGCInvokesConcurrent
+      -XX:+HeapDumpOnOutOfMemoryError
+      -XX:-OmitStackTraceInFastThrow
+      -XX:ReservedCodeCacheSize=512M
+      -XX:PerMethodRecompilationCutoff=10000
+      -XX:PerBytecodeRecompilationCutoff=10000
+      -Djdk.attach.allowAttachSelf=true
+      -Djdk.nio.maxCachedBufferSize=2000000
+      -Dfile.encoding=UTF-8
+      --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+      --add-opens=java.base/java.nio=ALL-UNNAMED
+      --add-opens=java.base/java.lang=ALL-UNNAMED
+      --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED
+      -XX:+UseG1GC
+      -agentpath:/usr/lib/starburst/bin/libjvmkill.so
+      -XX:+UnlockDiagnosticVMOptions
+      -XX:G1NumCollectionsKeepPinned=10000000
+      -Djdk.attach.allowAttachSelf=true
+      -XX:+UseAESCTRIntrinsics
+      -XX:GCLockerRetryAllocationCount=100
+      -Djdk.tls.disabledAlgorithms=SSLv3, RC4, DES, MD5withRSA, EC keySize < 224, 3DES_EDE_CBC, anon, NULL
 
   deploymentTerminationGracePeriodSeconds: 1 # dev only
   starburstWorkerShutdownGracePeriodSeconds: 1 # dev only
