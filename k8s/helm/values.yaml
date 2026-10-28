@@ -47,7 +47,7 @@ catalogs:
 # Coordinator
 # -------------------------------
 coordinator:
-  # Issue 1: Cap memory and CPU for local dev laptops
+  
   resources:
     limits:
       memory: "4Gi"
@@ -74,7 +74,7 @@ coordinator:
         name: sep-secrets
 
   etcFiles:
-    # Issue 4: Override JVM security to allow older MySQL 5.6 Aurora DH ciphers
+    
     jvm.config: |-
       -server
       -XX:G1HeapRegionSize=32M
@@ -131,7 +131,6 @@ coordinator:
         password-authenticator.name=ldap
         ldap.url=ldaps://openldap.example.com:636
         ldap.user-bind-pattern=uid=${USER},dc=example,dc=com
-        # Issue 3: Trust the LDAP cert fetched by the initContainer
         ldap.ssl.truststore.path=/etc/starburst/certs/keystore.jks
         ldap.ssl.truststore.password=changeit
 
@@ -144,14 +143,12 @@ coordinator:
 
       log.properties: |-
         io.trino=INFO
-        # Issue 3: Enable LDAP Debug Logging
         io.trino.security.ldap.LdapAuthenticator=DEBUG
 
 # -------------------------------
 # Worker
 # -------------------------------
 worker:
-  # Issue 1: Cap memory and CPU for local dev laptops
   resources:
     limits:
       memory: "4Gi"
@@ -161,13 +158,11 @@ worker:
       cpu: 1
   nodeMemoryHeadroom: "512Mi"
 
-  # Issue 2: Give workers access to the secrets so INSIGHTS_PSWD populates
   envFrom:
     - secretRef:
         name: sep-secrets
 
   etcFiles:
-    # Issue 4: Override JVM security to allow older MySQL 5.6 Aurora DH ciphers
     jvm.config: |-
       -server
       -XX:G1HeapRegionSize=32M
